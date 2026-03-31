@@ -13,8 +13,8 @@ public class rtp_packet {
     public int Marker;
     public int PayloadType;
     public int SequenceNumber;
-    public int TimeStamp;
-    public int Ssrc;
+    public long TimeStamp;
+    public long Ssrc;
     
     //Bitstream of the RTP header
     public byte[] header;
@@ -24,7 +24,7 @@ public class rtp_packet {
     //Bitstream of the RTP payload
     public byte[] payload;
 
-    public rtp_packet(int Framenb, int Time, byte[] data, int data_length) {
+    public rtp_packet(int Framenb, long Time, byte[] data, int data_length) {
         Version = 2;
         Padding = 0;
         Extension = 0;
@@ -121,7 +121,7 @@ public class rtp_packet {
         return payload_size + HEADER_SIZE;
     }
 
-    public int gettimestamp() {
+    public long gettimestamp() {
         return TimeStamp;
     }
 
