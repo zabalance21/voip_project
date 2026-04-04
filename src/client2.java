@@ -1,10 +1,6 @@
 //import RTP
-import rtp.rtp_packet;
-import rtp.RtpSender;
 import rtp.RtpReceiver;
 
-//Import RTCP
-import rtp.RtcpPacket;
 
 //Import SIP
 import sip.SipMessage;

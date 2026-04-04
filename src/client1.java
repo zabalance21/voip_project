@@ -1,10 +1,5 @@
 //import RTP
-import rtp.rtp_packet;
 import rtp.RtpSender;
-import rtp.RtpReceiver;
-
-//Import RTCP
-import rtp.RtcpPacket;
 
 //Import SIP
 import sip.SipMessage;
@@ -14,6 +9,12 @@ import sip.SdpBuilder;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+
+//java file utilities
+import java.io.File;
+
+//use input java util
+import java.util.Scanner;
 
 public class client1 {
 
@@ -86,6 +87,55 @@ public class client1 {
         System.out.println("Sent BYE to receiver.");
     }
 
+    //file method to list out the available wav files
+    public File[] getWavFiles(String path) {
+        
+        try {
+            File folder = new File(path);
+            File[] files = folder.listFiles((dir, name) -> name.toLowerCase().endsWith(".wav"));
+
+            if(files == null || files.length == 0) {
+                System.out.println("No audio files in the folder");
+                return new File[0];
+            }
+
+            return files;
+        } catch (Exception e) {
+            System.out.println("Error reading the folder for audio files: "  + e.getMessage());
+            return new File[0];
+        }
+
+    }
+
+    public String chooseFile(String path) {
+
+        int i;
+
+        try {
+            File[] files = getWavFiles(path);
+
+            if(files.length == 0){
+                return null;
+            }
+
+            System.out.println("List of Available Wav files");
+            
+            for(i = 0; i < files.length; i++){
+                System.out.println((i + 1) + ":" + files[i].getName());    
+            }
+
+            Scanner sc = new Scanner(System.in);
+            System.out.print("Select a file (1-" + files.length + "): ");
+            int choice = sc.nextInt();
+
+            return files[choice - 1].getPath();
+
+        } catch(Exception e) {
+            System.out.println("Error in choosing the file: "  + e.getMessage());
+            return null;
+        }
+    }
+
     private static volatile boolean rtpRunning = false;
     private static int rtpPort = 5004;
     private static String receiverIP = "127.0.0.1"; // localhost
@@ -96,13 +146,20 @@ public class client1 {
 
         client1 csdr = new client1();
 
+        //choose wav file
+        String audiopath = csdr.chooseFile("src/audio/");
+        System.out.println("Selected: " + audiopath);
+
         //Send INVITE
         csdr.sendInvite(receiverIP, 5060);
+
+
 
         //Listen for SIP responses
         DatagramSocket sipSocket = new DatagramSocket(5060);
         byte[] buffer = new byte[2048];
         boolean running = true;
+        boolean connected = false;
 
         while (running) {
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
@@ -113,27 +170,37 @@ public class client1 {
 
             SipMessage sip = SipMessage.parse(msg);
 
-            if (sip.isResponse()) {
-                if (msg.contains("200 OK") && sip.getMethod().isEmpty()) {
-                    // Response to INVITE
+            if (sip.isResponse() && sip.startLine.contains("200 OK")) {
+                
+                
+                if (!connected) {
+                   
+                    connected = true;
+
                     csdr.processOK(msg, senderIP);
 
-                    // Start sending RTP after ACK
-                    rtpRunning = true;
+                    int destRtpPort = SdpBuilder.extractRtpPort(sip.body);
+                    System.out.println("Remote RTP port: " + destRtpPort);
+
+                    // Start RTP
                     new Thread(() -> {
                         try {
-                            RtpSender.send(receiverIP, rtpPort, rtpPort + 1, "audio.wav");
+                            System.out.println("Sending: " + audiopath);
+                            RtpSender.send(receiverIP, destRtpPort, destRtpPort + 1, audiopath);
+                            System.out.println("Finished sending");
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }).start();
 
-                } else if (msg.contains("200 OK") && sip.getMethod().equals("BYE")) {
-                    // Response to BYE → stop everything
-                    System.out.println("Call ended by receiver.");
-                    rtpRunning = false;
-                    running = false;
-                }
+                    // Simulate call duration
+                    Thread.sleep(10000);
+
+                    csdr.sendBye();
+
+                } 
+
+
             }
         }
 
