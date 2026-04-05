@@ -67,6 +67,10 @@ public class client1 {
         //Sending of ACK
         SipMessage ack = new SipMessage();
         ack.startLine = "ACK sip:client1@" + senderIP + " SIP/2.0";
+        ack.headers.put("Via", sipMSG.headers.get("Via"));
+        ack.headers.put("From", sipMSG.headers.get("From"));
+        ack.headers.put("To", sipMSG.headers.get("To"));
+        ack.headers.put("CSeq", "1 ACK");
         ack.body = "";
 
         sendSIP(ack.rawSIP(), senderIP, 5060);
@@ -124,20 +128,21 @@ public class client1 {
                 System.out.println((i + 1) + ":" + files[i].getName());    
             }
 
-            Scanner sc = new Scanner(System.in);
-            System.out.print("Select a file (1-" + files.length + "): ");
-            int choice = sc.nextInt();
+            try (Scanner sc = new Scanner(System.in)) {
+                System.out.print("Select a file (1-" + files.length + "): ");
+                int choice = sc.nextInt();
 
-            return files[choice - 1].getPath();
+                return files[choice - 1].getPath();
+            }
 
         } catch(Exception e) {
             System.out.println("Error in choosing the file: "  + e.getMessage());
             return null;
         }
+
     }
 
-    private static volatile boolean rtpRunning = false;
-    private static int rtpPort = 5004;
+
     private static String receiverIP = "127.0.0.1"; // localhost
     
 
@@ -147,7 +152,16 @@ public class client1 {
         client1 csdr = new client1();
 
         //choose wav file
-        String audiopath = csdr.chooseFile("src/audio/");
+        String audiopath = csdr.chooseFile("wav_files/");
+
+        //handling null error for the audopath
+        if(audiopath == null) {
+            System.out.println("No valid file chosen");
+            System.out.println("Exiting program");
+            return;
+        }
+
+
         System.out.println("Selected: " + audiopath);
 
         //Send INVITE
@@ -199,6 +213,10 @@ public class client1 {
                     csdr.sendBye();
 
                 } 
+                else {
+                    System.out.println("VoIP Finished");
+                    running = false;
+                }
 
 
             }

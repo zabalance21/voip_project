@@ -10,7 +10,6 @@ import sip.SdpBuilder;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.InetAddress;
 
 public class client2 {
 
@@ -52,7 +51,7 @@ public class client2 {
         ok_200.headers.put("From", "<sip:client2@" + localIP + ">");
         ok_200.headers.put("To", "<sip:client1@" + senderIP + ">");
         ok_200.headers.put("CSeq", "1 INVITE");
-        ok_200.headers.put("Contact", "<sip:clien2@" + localIP + ">");
+        ok_200.headers.put("Contact", "<sip:client2@" + localIP + ">");
         ok_200.headers.put("Content-Type", "application/sdp");
         ok_200.body = localSdp;
 
@@ -66,14 +65,28 @@ public class client2 {
 
     //Process ACK
     public void processACK() throws Exception{
+        System.out.println("ACK received will now start rtp session");
 
+        rtp_recv = new RtpReceiver();
 
+        new Thread(() -> {
 
+            try {
+                rtp_recv.receive(5006, 5007, senderIP, senderRtpPort + 1);
+
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+
+        }).start();
     }
 
     //Process Bye
     public void processBye(String ip) throws Exception {
         //stop rtp
+        if (rtp_recv != null) {
+            rtp_recv.stop();
+        }
 
 
         String localIP = InetAddress.getLocalHost().getHostAddress();
@@ -86,7 +99,7 @@ public class client2 {
         ok200.headers.put("To", "<sip:client1@" + senderIP + ">");
         ok200.headers.put("CSeq", "2 BYE");
         
-        sendSIP(ok200.rawSIP(), senderIP, 5060);
+        sendSIP(ok200.rawSIP(), ip, 5060);
         System.out.println("SIP MESSAGE: BYE (sent)");
     }
 
@@ -94,8 +107,7 @@ public class client2 {
     //class variables
     private String senderIP;
     private int senderRtpPort;
-    private static volatile boolean stop = false;
-
+    private RtpReceiver rtp_recv;
 
     public static void main(String arg[]) throws Exception{
 
@@ -123,6 +135,8 @@ public class client2 {
                         break;
                     case "ACK":
                         //rtp processing
+                        crcv.processACK();
+                        break;
                     case "BYE":
                         crcv.processBye(client1_IP);
                         running = false;
