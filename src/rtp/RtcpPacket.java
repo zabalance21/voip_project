@@ -1,5 +1,4 @@
 package rtp;
-import java.util.Random;
 
 public class RtcpPacket {
     // Packet Types
