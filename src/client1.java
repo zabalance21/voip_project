@@ -73,7 +73,7 @@ public class client1 {
         ack.headers.put("CSeq", "1 ACK");
         ack.body = "";
 
-        sendSIP(ack.rawSIP(), senderIP, 5060);
+        sendSIP(ack.rawSIP(), senderIP, 5061);
     }
 
     //Send bye method
@@ -87,7 +87,8 @@ public class client1 {
         bye.headers.put("From", "<sip:client1@" + localIP + ">");
         bye.headers.put("To", "<sip:client2@" + receiverIP + ">");
         bye.headers.put("CSeq", "2 BYE");
-        sendSIP(bye.rawSIP(), receiverIP, 5060);
+        bye.body = "";
+        sendSIP(bye.rawSIP(), receiverIP, 5061);
         System.out.println("Sent BYE to receiver.");
     }
 
@@ -152,7 +153,7 @@ public class client1 {
         client1 csdr = new client1();
 
         //choose wav file
-        String audiopath = csdr.chooseFile("wav_files/");
+        String audiopath = csdr.chooseFile("../wav_files/");
 
         //handling null error for the audopath
         if(audiopath == null) {
@@ -165,7 +166,7 @@ public class client1 {
         System.out.println("Selected: " + audiopath);
 
         //Send INVITE
-        csdr.sendInvite(receiverIP, 5060);
+        csdr.sendInvite(receiverIP, 5061);
 
 
 
@@ -202,16 +203,18 @@ public class client1 {
                             System.out.println("Sending: " + audiopath);
                             RtpSender.send(receiverIP, destRtpPort, destRtpPort + 1, audiopath);
                             System.out.println("Finished sending");
+
+                            //calline the bye method when rtp finishes to end the VoIP
+                            try {
+                                csdr.sendBye();
+                            } catch(Exception e) {
+                                e.printStackTrace();
+                            }
+
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
                     }).start();
-
-                    // Simulate call duration
-                    Thread.sleep(10000);
-
-                    csdr.sendBye();
-
                 } 
                 else {
                     System.out.println("VoIP Finished");

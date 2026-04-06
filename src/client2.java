@@ -47,7 +47,7 @@ public class client2 {
 
         SipMessage ok_200 = new SipMessage();
         ok_200.startLine = "SIP/2.0 200 OK";
-        ok_200.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5060");
+        ok_200.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
         ok_200.headers.put("From", "<sip:client2@" + localIP + ">");
         ok_200.headers.put("To", "<sip:client1@" + senderIP + ">");
         ok_200.headers.put("CSeq", "1 INVITE");
@@ -83,6 +83,7 @@ public class client2 {
 
     //Process Bye
     public void processBye(String ip) throws Exception {
+        
         //stop rtp
         if (rtp_recv != null) {
             rtp_recv.stop();
@@ -94,10 +95,11 @@ public class client2 {
         //send ok for bye
         SipMessage ok200 = new SipMessage();
         ok200.startLine = "SIP/2.0 200 OK";
-        ok200.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5060");
+        ok200.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
         ok200.headers.put("From", "<sip:client2@" + localIP + ">");
         ok200.headers.put("To", "<sip:client1@" + senderIP + ">");
         ok200.headers.put("CSeq", "2 BYE");
+        ok200.body = "";
         
         sendSIP(ok200.rawSIP(), ip, 5060);
         System.out.println("SIP MESSAGE: BYE (sent)");
@@ -112,7 +114,7 @@ public class client2 {
     public static void main(String arg[]) throws Exception{
 
         client2 crcv = new client2();
-        DatagramSocket socket = new DatagramSocket(5060);
+        DatagramSocket socket = new DatagramSocket(5061);
         byte[] buffer = new byte[2048];
 
         System.out.println("Waiting for SIP messages.....");

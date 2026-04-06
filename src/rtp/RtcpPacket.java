@@ -28,8 +28,9 @@ public class RtcpPacket {
 
         // NTP Timestamp (8 bytes)
         // Full 64-bit NTP timestamp: seconds since Jan 1, 1900
-        long ntpSeconds = (System.currentTimeMillis() / 1000L) + 2208988800L;
-        long ntpFraction = ((System.currentTimeMillis() % 1000L) * 0x100000000L) / 1000L;
+        long now = System.currentTimeMillis();
+        long ntpSeconds = (now / 1000L) + 2208988800L;
+        long ntpFraction = ((now % 1000L) * 0x100000000L) / 1000L;
         sr[8] = (byte)((ntpSeconds >> 24) & 0xFF);
         sr[9] = (byte)((ntpSeconds >> 16) & 0xFF);
         sr[10] = (byte)((ntpSeconds >> 8) & 0xFF);
@@ -41,7 +42,7 @@ public class RtcpPacket {
 
         // RTP Timestamp (4 bytes)
         // Corresponds to NTP timestamp above, in RTP clock units (8000 Hz)
-        long rtpTimestamp = (ntpSeconds * 8000L) & 0xFFFFFFFFL;
+        long rtpTimestamp = (now * 8) & 0xFFFFFFFFL;
         sr[16] = (byte)((rtpTimestamp >> 24) & 0xFF);
         sr[17] = (byte)((rtpTimestamp >> 16) & 0xFF);
         sr[18] = (byte)((rtpTimestamp >> 8) & 0xFF);
@@ -72,6 +73,10 @@ public class RtcpPacket {
     public static byte[] buildRR(long ssrc, long senderSsrc, int fractionlost, int cumLost,
                                  int extendedHighSeq, long jitter, long lastSR, long delaySinceLastSr){
         byte[] rr = new byte[32];
+
+        //safeguard for range values of fractionlost and cumLost
+        fractionlost = Math.max(0, Math.min(255, fractionlost));
+        cumLost = Math.max(0, Math.min(0xFFFFFF, cumLost));
 
         // RTCP Common Header (4bytes)
         rr[0] = (byte) 0x81;
@@ -176,7 +181,10 @@ public class RtcpPacket {
     // HELPER - Extract LSR from a received SR
     // Used to populate the LSR field in next RR
     public static long extractLSR(byte[] srData){
-        if(srData == null || srData.length < 16){ return 0; }
+        if (srData == null || srData.length < 16) return 0;
+
+        int packetType = srData[1] & 0xFF;
+        if (packetType != senderPT) return 0;
         return ((long)(srData[10] & 0xFF) << 24) | ((long)(srData[11] & 0xFF) << 16) |
                 ((long)(srData[12] & 0xFF) << 8) | ((long)(srData[13] & 0xFF));
     }
@@ -184,8 +192,8 @@ public class RtcpPacket {
     // HELPER - Compute DLSR
     public static long computeDLSR(long lastSrReceivedAtMs){
         if(lastSrReceivedAtMs == 0){ return 0; }
-        long elaspedMs = System.currentTimeMillis() - lastSrReceivedAtMs;
-        return (elaspedMs * 65536L) / 1000L; // Convert ms → 1/65536 sec units: (elapsed / 1000) * 65536
+        long elapsedMs = System.currentTimeMillis() - lastSrReceivedAtMs;
+        return (elapsedMs * 65536L) / 1000L; // Convert ms → 1/65536 sec units: (elapsed / 1000) * 65536
 
     }
 }

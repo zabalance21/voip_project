@@ -6,6 +6,7 @@ import javax.sound.sampled.SourceDataLine;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Random;
@@ -22,10 +23,12 @@ public class RtpReceiver {
     private long lastSrTimestamp = 0; // LSR from last received SR
     private long lastSrReceivedAt = 0; // time we recieved at that SR
     private long recieverSSRC = new Random().nextLong() & 0xFFFFFFFFL;
+    private DatagramSocket rtcpSocket;
+    private DatagramSocket rtpSocket;
 
     public void receive(int rtpPort, int rtcpPort, String senderIp, int senderRtcpPort) throws Exception{
-        DatagramSocket rtpSocket = new DatagramSocket(rtpPort);
-        DatagramSocket rtcpSocket = new DatagramSocket(rtcpPort);
+        rtpSocket = new DatagramSocket(rtpPort);
+        rtcpSocket = new DatagramSocket(rtcpPort);
         rtpSocket.setSoTimeout(5000); // Stop if silent 5s
 
         // Open speaker for playback
@@ -49,7 +52,10 @@ public class RtpReceiver {
                     lastSrTimestamp = RtcpPacket.extractLSR(srBytes);
                     lastSrReceivedAt = System.currentTimeMillis();
 
-                } catch (Exception e) {
+                } catch (SocketException e){
+                    if (running) e.printStackTrace();
+                    break;
+                }catch (Exception e) {
                     break;
                 }
             }
@@ -93,6 +99,11 @@ public class RtpReceiver {
             }catch (SocketTimeoutException e){
                 System.out.println("[RTP] No packets for 5s — stopping receiver.");
                 break;
+            } catch (SocketException e){
+                if (running) e.printStackTrace();
+                break;
+            } catch (Exception e){
+                e.printStackTrace();
             }
         }
         speaker.drain();
@@ -152,6 +163,8 @@ public class RtpReceiver {
 
     public void stop(){
         running = false;
+        if(rtpSocket != null && !rtpSocket.isClosed()) rtpSocket.close();
+        if(rtcpSocket != null && !rtcpSocket.isClosed()) rtcpSocket.close();
     }
 
 }

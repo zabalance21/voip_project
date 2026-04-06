@@ -56,7 +56,7 @@ public class RtpSender {
                         packetCount,
                         octetCount
                 );
-                rtcpSocket.send(new DatagramPacket(sr, sr.length, dest, destRtpPort));
+                rtcpSocket.send(new DatagramPacket(sr, sr.length, dest, destRtcpPort));
                 System.out.println("[RTCP] Sent SR — packets=" + packetCount + " bytes=" + octetCount);
             }
             Thread.sleep(INTERVAL_MILISECS); // sending at 20ms intervals
@@ -64,7 +64,7 @@ public class RtpSender {
 
         // Send final RTCP SR when done
         byte[] finalSr = RtcpPacket.buildSR(0L, packetCount, octetCount);
-        rtcpSocket.send(new DatagramPacket(finalSr, finalSr.length, dest, destRtpPort));
+        rtcpSocket.send(new DatagramPacket(finalSr, finalSr.length, dest, destRtcpPort));
         System.out.println("[RTCP] Sent final SR — packets=" + packetCount + " bytes=" + octetCount);
         rtpSocket.close();
         rtcpSocket.close();
