@@ -2,4 +2,6 @@
 
 ## Group Members
 Ronin P. Zerna<br>
-Don Oswin Campos
+Don Oswin D. Campos
+
+## Instructions for Compiling and Running
