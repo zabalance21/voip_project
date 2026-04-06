@@ -11,16 +11,18 @@ First, compile both the `client1` and `client2` Java files:
 ```bash
 javac client1.java
 javac client2.java
+```bash
 
 Run client2 first
 client2 will listen for any SIP message that comes through:
-
+```bash
 java client2
-
+```bash
 Run client1 next
 You will choose among the available sample audio files:
-
+```bash
 java client1
+```bash
 
 SIP negotiation:
 client1 automatically sends a SIP INVITE.
