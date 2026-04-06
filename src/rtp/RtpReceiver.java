@@ -11,6 +11,14 @@ import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Random;
 
+//utilites for storing received audio file
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.AudioInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+
 public class RtpReceiver {
     private volatile boolean running = true;
 
@@ -64,6 +72,15 @@ public class RtpReceiver {
         rtcpThread.start();
 
         long packetCount = 0;
+
+        //buffer to store pcmu frames for writing to file
+        ByteArrayOutputStream pcm_recv = new ByteArrayOutputStream();
+        File outputFolder = new File("../recv_files/");
+        File recv_wav = new File(outputFolder, "recv_file.wav");
+        
+
+
+        
         // RTP Receive Loop
         while(running){
             try{
@@ -89,6 +106,10 @@ public class RtpReceiver {
 
                 // Play decoded PCMU
                 speaker.write(pcm, 0, pcm.length);
+
+                //Save PCM to pcm_recv buffer in order to save to Wav
+                pcm_recv.write(pcm);
+
                 packetCount++;
 
                 // Send RTCP RR every 50 packets
@@ -110,6 +131,21 @@ public class RtpReceiver {
         speaker.close();
         rtpSocket.close();
         rtcpSocket.close();
+
+        //Save received PCM data to wav file
+        try {
+            byte[] audioData = pcm_recv.toByteArray();
+            ByteArrayInputStream pcm_recv_InputStream = new ByteArrayInputStream(audioData);
+            
+            AudioInputStream ais = new AudioInputStream(pcm_recv_InputStream,new javax.sound.sampled.AudioFormat(8000,16,1,true,false),audioData.length / 2 );
+
+            AudioSystem.write(ais, javax.sound.sampled.AudioFileFormat.Type.WAVE, recv_wav);
+            System.out.println("Saved received audio to " + recv_wav.getAbsolutePath());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         System.out.println("[RTP] Receiver stopped.");
     }
 
