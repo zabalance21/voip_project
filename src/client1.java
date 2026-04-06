@@ -185,7 +185,11 @@ public class client1 {
 
             SipMessage sip = SipMessage.parse(msg);
 
-            if (sip.isResponse() && sip.startLine.contains("200 OK")) {
+            String statusLine = sip.startLine;
+            System.out.println("Received: " + statusLine);
+
+            // Process 200 OK response
+            if (sip.isResponse() && statusLine.contains("200 OK")) {
                 
                 
                 if (!connected) {
@@ -222,6 +226,12 @@ public class client1 {
                 }
 
 
+            }
+            //handle error 4yy and 5xx responses
+            else if(statusLine.startsWith("SIP/2.0 4") || statusLine.startsWith("SIP/2.0 5")) {
+                System.out.println("Error Connecting" + statusLine);
+                System.out.println("Exiting program");
+                running = false;    
             }
         }
 

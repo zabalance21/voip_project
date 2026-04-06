@@ -11,6 +11,9 @@ import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 
+//java utility for user input
+import java.util.Scanner;
+
 public class client2 {
 
     /////////////////////////////
@@ -43,24 +46,64 @@ public class client2 {
         int localPort = 5006;
         String localIP = InetAddress.getLocalHost().getHostAddress();
 
-        String localSdp = SdpBuilder.build(localIP, localPort);
+        SipMessage response = new SipMessage();
 
-        SipMessage ok_200 = new SipMessage();
-        ok_200.startLine = "SIP/2.0 200 OK";
-        ok_200.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
-        ok_200.headers.put("From", "<sip:client2@" + localIP + ">");
-        ok_200.headers.put("To", "<sip:client1@" + senderIP + ">");
-        ok_200.headers.put("CSeq", "1 INVITE");
-        ok_200.headers.put("Contact", "<sip:client2@" + localIP + ">");
-        ok_200.headers.put("Content-Type", "application/sdp");
-        ok_200.body = localSdp;
+        //case when timeout mode is selected
+        if(MODE.equals("TIMEOUT")) {
+            String localSdp = SdpBuilder.build(localIP, localPort);
 
+            response.startLine = "SIP/2.0 200 OK";
+            response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
+            response.headers.put("From", "<sip:client2@" + localIP + ">");
+            response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("CSeq", "1 INVITE");
+            response.headers.put("Contact", "<sip:client2@" + localIP + ">");
+            response.headers.put("Content-Type", "application/sdp");
+            response.body = localSdp;
 
-        sendSIP(ok_200.rawSIP(), senderIP, 5060);
-        this.senderIP = senderIP;
-        this.senderRtpPort = rtp_port;
+            this.senderIP = senderIP;
+            this.senderRtpPort = rtp_port;
+        }
 
+        //building 200 OK response if mode is OK
+        if(MODE.equals("OK")) {
+            String localSdp = SdpBuilder.build(localIP, localPort);
 
+            response.startLine = "SIP/2.0 200 OK";
+            response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
+            response.headers.put("From", "<sip:client2@" + localIP + ">");
+            response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("CSeq", "1 INVITE");
+            response.headers.put("Contact", "<sip:client2@" + localIP + ">");
+            response.headers.put("Content-Type", "application/sdp");
+            response.body = localSdp;
+
+            this.senderIP = senderIP;
+            this.senderRtpPort = rtp_port;
+        }
+
+        //sample sip message with error of 4yy
+        if(MODE.equals("4YY")) {
+            response.startLine = "SIP/2.0 404 Not Found";
+            response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
+            response.headers.put("From", "<sip:client2@" + localIP + ">");
+            response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("CSeq", "1 INVITE");
+            response.body = "";
+        }
+
+        //sample sip message with error of 5xx
+        if(MODE.equals("5XX")) {    
+            response.startLine = "SIP/2.0 500 Internal Server Error";
+            response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
+            response.headers.put("From", "<sip:client2@" + localIP + ">");
+            response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("CSeq", "1 INVITE");
+            response.body = "";
+        }
+
+        //send SIP response
+        sendSIP(response.rawSIP(), senderIP, 5060);
     }
 
     //Process ACK
@@ -73,7 +116,6 @@ public class client2 {
 
             try {
                 rtp_recv.receive(5006, 5007, senderIP, senderRtpPort + 1);
-
             } catch(Exception e) {
                 e.printStackTrace();
             }
@@ -110,8 +152,33 @@ public class client2 {
     private String senderIP;
     private int senderRtpPort;
     private RtpReceiver rtp_recv;
+    private static String MODE = "OK";
 
     public static void main(String arg[]) throws Exception{
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Select mode: OK, TIMEOUT, 4YY, 5XX");
+        System.out.println("1: OK");
+        System.out.println("2: TIMEOUT");
+        System.out.println("3: 4YY");
+        System.out.println("4: 5XX");
+
+        int choice = sc.nextInt();
+        switch(choice) {
+            case 1:
+                MODE = "OK";
+                break;
+            case 2:
+                MODE = "TIMEOUT";
+                break;
+            case 3:
+                MODE = "4YY";
+                break;
+            case 4:
+                MODE = "5XX";
+                break;
+        }
 
         client2 crcv = new client2();
         DatagramSocket socket = new DatagramSocket(5061);
@@ -134,6 +201,12 @@ public class client2 {
                 switch(sip.getMethod()) {
                     case "INVITE":
                         crcv.processInvite(msg, client1_IP);
+
+                        //ending when there is an error like 4yy or 5xx
+                        if(MODE.equals("4YY") || MODE.equals("5XX")) {
+                            System.out.println("Ending session due encountered error");
+                            running = false;
+                        }
                         break;
                     case "ACK":
                         //rtp processing
@@ -149,6 +222,6 @@ public class client2 {
 
         socket.close();
         System.out.println("RTP closed");
-
+        sc.close();
     }
 }
