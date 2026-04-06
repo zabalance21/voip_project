@@ -56,9 +56,11 @@ public class client2 {
             response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
             response.headers.put("From", "<sip:client2@" + localIP + ">");
             response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("Call-ID", "testRTP67@" + localIP);
             response.headers.put("CSeq", "1 INVITE");
             response.headers.put("Contact", "<sip:client2@" + localIP + ">");
             response.headers.put("Content-Type", "application/sdp");
+            response.headers.put("Content-Length", String.valueOf(localSdp.length()));
             response.body = localSdp;
 
             this.senderIP = senderIP;
@@ -73,9 +75,11 @@ public class client2 {
             response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
             response.headers.put("From", "<sip:client2@" + localIP + ">");
             response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("Call-ID", "testRTP67@" + localIP);
             response.headers.put("CSeq", "1 INVITE");
             response.headers.put("Contact", "<sip:client2@" + localIP + ">");
             response.headers.put("Content-Type", "application/sdp");
+            response.headers.put("Content-Length", String.valueOf(localSdp.length()));
             response.body = localSdp;
 
             this.senderIP = senderIP;
@@ -88,7 +92,9 @@ public class client2 {
             response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
             response.headers.put("From", "<sip:client2@" + localIP + ">");
             response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("Call-ID", "testRTP67@" + localIP);
             response.headers.put("CSeq", "1 INVITE");
+            response.headers.put("Content-Length", "0");
             response.body = "";
         }
 
@@ -98,7 +104,9 @@ public class client2 {
             response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
             response.headers.put("From", "<sip:client2@" + localIP + ">");
             response.headers.put("To", "<sip:client1@" + senderIP + ">");
+            response.headers.put("Call-ID", "testRTP67@" + localIP);
             response.headers.put("CSeq", "1 INVITE");
+            response.headers.put("Content-Length", "0");
             response.body = "";
         }
 
@@ -140,7 +148,9 @@ public class client2 {
         ok200.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
         ok200.headers.put("From", "<sip:client2@" + localIP + ">");
         ok200.headers.put("To", "<sip:client1@" + senderIP + ">");
+        ok200.headers.put("Call-ID", "testRTP67@" + localIP);
         ok200.headers.put("CSeq", "2 BYE");
+        ok200.headers.put("Content-Length", "0");
         ok200.body = "";
         
         sendSIP(ok200.rawSIP(), ip, 5060);

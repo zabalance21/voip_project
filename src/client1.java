@@ -50,9 +50,11 @@ public class client1 {
         invite.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5060");
         invite.headers.put("From", "<sip:client1@" + localIP + ">");
         invite.headers.put("To", "<sip:client2@" + ip + ">");
+        invite.headers.put("Call-ID", "testRTP67@" + localIP);
         invite.headers.put("CSeq", "1 INVITE");
         invite.headers.put("Contact", "<sip:client@" + localIP + ">");
         invite.headers.put("Content-Type", "application/sdp");
+        invite.headers.put("Content-Length", String.valueOf(sdp.length()));
         invite.body = sdp;
 
         sendSIP(invite.rawSIP(), ip, port);
@@ -70,7 +72,9 @@ public class client1 {
         ack.headers.put("Via", sipMSG.headers.get("Via"));
         ack.headers.put("From", sipMSG.headers.get("From"));
         ack.headers.put("To", sipMSG.headers.get("To"));
+        ack.headers.put("Call-ID", sipMSG.headers.get("Call-ID"));
         ack.headers.put("CSeq", "1 ACK");
+        ack.headers.put("Content-Length", "0");
         ack.body = "";
 
         sendSIP(ack.rawSIP(), senderIP, 5061);
@@ -86,7 +90,9 @@ public class client1 {
         bye.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5060");
         bye.headers.put("From", "<sip:client1@" + localIP + ">");
         bye.headers.put("To", "<sip:client2@" + receiverIP + ">");
+        bye.headers.put("Call-ID", "testRTP67@" + localIP);
         bye.headers.put("CSeq", "2 BYE");
+        bye.headers.put("Content-Length", "0");
         bye.body = "";
         sendSIP(bye.rawSIP(), receiverIP, 5061);
         System.out.println("Sent BYE to receiver.");
