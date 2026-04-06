@@ -79,6 +79,4 @@ Ending the session:
 ### 6. Error Handling
 - SIP 4xx and 5xx responses are logged and handled without crashing
 - Unexpected or malformed packets are caught and logged
-- RTP receiver stops cleanly after **5 seconds** of no incoming packets
-  (`SocketTimeoutException`)
 - All sockets are properly closed after the session ends

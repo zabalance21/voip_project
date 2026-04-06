@@ -48,25 +48,6 @@ public class client2 {
 
         SipMessage response = new SipMessage();
 
-        //case when timeout mode is selected
-        if(MODE.equals("TIMEOUT")) {
-            String localSdp = SdpBuilder.build(localIP, localPort);
-
-            response.startLine = "SIP/2.0 200 OK";
-            response.headers.put("Via", "SIP/2.0/UDP " + localIP + ":5061");
-            response.headers.put("From", "<sip:client2@" + localIP + ">");
-            response.headers.put("To", "<sip:client1@" + senderIP + ">");
-            response.headers.put("Call-ID", "testRTP67@" + localIP);
-            response.headers.put("CSeq", "1 INVITE");
-            response.headers.put("Contact", "<sip:client2@" + localIP + ">");
-            response.headers.put("Content-Type", "application/sdp");
-            response.headers.put("Content-Length", String.valueOf(localSdp.length()));
-            response.body = localSdp;
-
-            this.senderIP = senderIP;
-            this.senderRtpPort = rtp_port;
-        }
-
         //building 200 OK response if mode is OK
         if(MODE.equals("OK")) {
             String localSdp = SdpBuilder.build(localIP, localPort);
@@ -170,9 +151,8 @@ public class client2 {
 
         System.out.println("Select mode: OK, TIMEOUT, 4YY, 5XX");
         System.out.println("1: OK");
-        System.out.println("2: TIMEOUT");
-        System.out.println("3: 4YY");
-        System.out.println("4: 5XX");
+        System.out.println("2: 4YY");
+        System.out.println("3: 5XX");
 
         int choice = sc.nextInt();
         switch(choice) {
@@ -180,12 +160,9 @@ public class client2 {
                 MODE = "OK";
                 break;
             case 2:
-                MODE = "TIMEOUT";
-                break;
-            case 3:
                 MODE = "4YY";
                 break;
-            case 4:
+            case 3:
                 MODE = "5XX";
                 break;
         }
